@@ -1722,7 +1722,15 @@ var fluidPlayerClass = {
             var videoPlayerInstance = fluidPlayerClass.getInstanceById(videoInstanceId);
             player.switchToMainVideo();
             player.playPauseToggle(videoPlayerTag);
+        } else {
+            // If somebody seeks to the end of the video while being paused, you don't want pause- and complete-screen to overlap
+            var blockOnPause = document.getElementById(player.videoPlayerId + '_fluid_html_on_pause'); 
+            blockOnPause.style.display = 'none'; 
+            
+            var blockOnComplete = document.getElementById(player.videoPlayerId + '_fluid_html_on_complete');
+            blockOnComplete.style.display = 'flex';
         }
+
     },
 
     getCurrentTime: function() {
@@ -2974,6 +2982,10 @@ var fluidPlayerClass = {
             player.prepareVast('preRoll');
         }
 
+        // if endcard is displayed, hide it now
+        var blockOnComplete = document.getElementById(player.videoPlayerId + '_fluid_html_on_complete');
+        blockOnComplete.style.display = 'none';
+
         var prepareVastAdsThatKnowDuration = function() {
             player.prepareVast('onPauseRoll');
             player.prepareVast('postRoll');
@@ -3239,6 +3251,8 @@ var fluidPlayerClass = {
         var initiateVolumebarTimerId = setInterval(initiateVolumebar, 100);
 
         player.initHtmlOnPauseBlock();
+        
+        player.initHtmlOnCompleteBlock();
 
         player.setCustomControls();
 
@@ -3789,6 +3803,34 @@ var fluidPlayerClass = {
 
         videoPlayer.parentNode.insertBefore(logoHolder, null);
         logoHolder.appendChild(logoImage, null);
+    },
+
+    initHtmlOnCompleteBlock: function() {
+        var player = this;
+
+        if (!player.displayOptions.layoutControls.htmlOnCompleteBlock.html) {
+            return;
+        }
+
+        var videoPlayer = document.getElementById(player.videoPlayerId);
+        var containerDiv = document.createElement('div');
+        containerDiv.id = player.videoPlayerId + '_fluid_html_on_complete';
+        containerDiv.className = 'fluid_html_on_complete';
+        containerDiv.style.display = 'none';
+        containerDiv.innerHTML = player.displayOptions.layoutControls.htmlOnCompleteBlock.html;
+        containerDiv.onclick = function(event) {
+            player.playPauseToggle(videoPlayer);
+        };
+
+        if (player.displayOptions.layoutControls.htmlOnCompleteBlock.width) {
+            containerDiv.style.width = player.displayOptions.layoutControls.htmlOnCompleteBlock.width + 'px';
+        }
+
+        if (player.displayOptions.layoutControls.htmlOnCompleteBlock.height) {
+            containerDiv.style.height = player.displayOptions.layoutControls.htmlOnCompleteBlock.height + 'px';
+        }
+
+        videoPlayer.parentNode.insertBefore(containerDiv, null);
     },
 
     initHtmlOnPauseBlock: function() {
@@ -4475,6 +4517,11 @@ var fluidPlayerClass = {
                     spriteImage:              false,
                     spriteRelativePath:       false
                 },
+                htmlOnCompleteBlock: {
+                    html:                     null,
+                    height:                   null,
+                    width:                    null
+                },
                 htmlOnPauseBlock: {
                     html:                     null,
                     height:                   null,
@@ -4713,6 +4760,44 @@ var fluidPlayerClass = {
 
     isCurrentlyPlayingVideo: function(instance) {
         return instance && instance.currentTime > 0 && !instance.paused && !instance.ended && instance.readyState > 2;
+    },
+
+    setHtmlOnCompleteBlock: function(passedHtml) {
+        if (typeof passedHtml != 'object' || typeof passedHtml.html == 'undefined') {
+            return false;
+        }
+
+        var htmlBlock = document.getElementById(this.videoPlayerId + "_fluid_html_on_complete");
+
+        // We create the HTML block from scratch if it doesn't already exist
+        if (!htmlBlock) {
+            var videoPlayer = document.getElementById(player.videoPlayerId);
+            var containerDiv = document.createElement('div');
+            containerDiv.id = player.videoPlayerId + '_fluid_html_on_complete';
+            containerDiv.className = 'fluid_html_on_complete';
+            containerDiv.style.display = 'none';
+            containerDiv.innerHTML = passedHtml.html;
+
+            if (passedHtml.width) {
+                containerDiv.style.width = passedHtml.width + 'px';
+            }
+
+            if (passedHtml.height) {
+                containerDiv.style.height = passedHtml.height + 'px';
+            }
+
+            videoPlayer.parentNode.insertBefore(containerDiv, null);
+        } else {
+            htmlBlock.innerHTML = passedHtml.html;
+
+            if (passedHtml.width) {
+                htmlBlock.style.width = passedHtml.width + 'px';
+            }
+
+            if (passedHtml.height) {
+                htmlBlock.style.height = passedHtml.height + 'px';
+            }
+        }
     },
 
     setHtmlOnPauseBlock: function(passedHtml) {
