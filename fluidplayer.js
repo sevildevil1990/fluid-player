@@ -1725,10 +1725,14 @@ var fluidPlayerClass = {
         } else {
             // If somebody seeks to the end of the video while being paused, you don't want pause- and complete-screen to overlap
             var blockOnPause = document.getElementById(player.videoPlayerId + '_fluid_html_on_pause'); 
-            blockOnPause.style.display = 'none'; 
+            if(blockOnPause){
+                blockOnPause.style.display = 'none'; 
+            }
             
             var blockOnComplete = document.getElementById(player.videoPlayerId + '_fluid_html_on_complete');
-            blockOnComplete.style.display = 'flex';
+            if(blockOnComplete){
+                blockOnComplete.style.display = 'flex';
+            }
         }
 
     },
@@ -2984,8 +2988,10 @@ var fluidPlayerClass = {
 
         // if endcard is displayed, hide it now
         var blockOnComplete = document.getElementById(player.videoPlayerId + '_fluid_html_on_complete');
-        blockOnComplete.style.display = 'none';
-
+        if(blockOnComplete){
+            blockOnComplete.style.display = 'none';
+        }
+        
         var prepareVastAdsThatKnowDuration = function() {
             player.prepareVast('onPauseRoll');
             player.prepareVast('postRoll');
